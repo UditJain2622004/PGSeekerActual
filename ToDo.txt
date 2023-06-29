@@ -1,0 +1,37 @@
+
+
+
+
+
+veg,non-veg food
+lowercase field values
+sharing and price mixed query
+min-max price query
+search by name  -- NO
+
+
+
+should user have a profile/photo??   -- NO
+should email be updated? (updateMe)  -- NO
+should a user be deleted? (deleteMe) -- NO
+
+
+set email sending gmail (config.env)
+change image upload folder name for actual uploads
+improve image upload settings (like edit image before upload)
+official email on mongoDB Atlas and Cloudinary
+cors settings (app.js)
+deleting pg and reviews on deleting user
+deleting reviews on deleting pg
+furnish app.js
+confirm email
+delete uploaded images if error during creating pg
+
+
+location field
+decide which route to protect,restrict
+in reviews, taking pg id from url params(queryString), user id from user._id
+
+
+pgownerid set in database
+restrictions removed from create pg route
