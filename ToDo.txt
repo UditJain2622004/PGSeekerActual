@@ -1,8 +1,3 @@
-
-
-
-
-
 veg,non-veg food
 lowercase field values
 sharing and price mixed query
@@ -16,8 +11,18 @@ should email be updated? (updateMe)  -- NO
 should a user be deleted? (deleteMe) -- NO
 
 
+***good tutorial bookmarked for showing errors in frontend
+
+login with google
+enum in address.state
+image validation
+ratingsQuantity and average should not be set even if given in body
+minprice maxPrice validation
+gateClosingTimeValidation
+search pgs based on (nearby) places (maybe make spearate schema for places)
 set email sending gmail (config.env)
 change image upload folder name for actual uploads
+change git repository to private
 improve image upload settings (like edit image before upload)
 official email on mongoDB Atlas and Cloudinary
 cors settings (app.js)
@@ -35,3 +40,9 @@ in reviews, taking pg id from url params(queryString), user id from user._id
 
 pgownerid set in database
 restrictions removed from create pg route
+
+**Frontend
+infinite scroll
+top loading bar
+propTypes
+defaultProps

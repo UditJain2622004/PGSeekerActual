@@ -5,6 +5,9 @@ import bodyParser from "body-parser";
 import cors from "cors";
 
 // const pug = require("pug");
+
+import pgRouter from "./routes/pgRouter.js";
+import globalErrorHandler from "./controllers/errorController.js";
 // const pgRouter = require("./routes/pgrouter");
 // const reviewRouter = require("./routes/reviewRouter");
 // const userRouter = require("./routes/userRouter");
@@ -27,10 +30,10 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(express.json({ limit: "100kb" }));
-// app.use("/api/v1/pg", pgRouter);
+app.use("/api/v1/pg", pgRouter);
 // app.use("/api/v1/review", reviewRouter);
 // app.use("/api/v1/user", userRouter);
 
-// app.use(globalErrorHandler);
+app.use(globalErrorHandler);
 
 export default app;
