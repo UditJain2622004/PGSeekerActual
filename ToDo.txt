@@ -14,10 +14,16 @@ should a user be deleted? (deleteMe) -- NO
 ***good tutorial bookmarked for showing errors in frontend
 
 login with google
+refresh token
+email confirmation
+mobile no confirmaion
 enum in address.state
 image validation
+default ratings should be 0
 ratingsQuantity and average should not be set even if given in body
-minprice maxPrice validation
+improve reviews like review for different features of PG
+it should not be possible to give review 2 times on same PG. like if review given, there should be some indication on frontend that user has already reviewed it instead of letting user
+give review again and then show error (or maybe show an edit review option)
 gateClosingTimeValidation
 search pgs based on (nearby) places (maybe make spearate schema for places)
 set email sending gmail (config.env)
@@ -31,6 +37,7 @@ deleting reviews on deleting pg
 furnish app.js
 confirm email
 delete uploaded images if error during creating pg
+import only necessary functions from packages(for e.g only validator.isEmail not the complete validator package) (research if this actually enhances performance)
 
 
 location field

@@ -1,4 +1,4 @@
-// import slugify from "slugify";
+import slugify from "slugify";
 import mongoose from "mongoose";
 import validator from "validator";
 
@@ -218,6 +218,8 @@ const pgSchema = new mongoose.Schema(
       },
     },
 
+    //done above this
+
     ratingsAverage: {
       type: Number,
       default: 4,
@@ -262,7 +264,7 @@ pgSchema.virtual("reviews", {
 
 pgSchema.pre(/^find/, function (next) {
   this.populate({
-    path: "pgOwner",
+    path: "owner",
     select: "name email -_id",
   });
   next();
