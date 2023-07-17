@@ -79,8 +79,9 @@ const pgSchema = new mongoose.Schema(
 
     pgType: {
       type: String,
+      lowercase: true,
       enum: {
-        values: ["male", "female", "coLiving"],
+        values: ["male", "female", "coliving"],
         message: "PG can be of type - 'male', 'female' or 'coLiving' only.",
       },
       required: [true, "Please specify type of your PG."],

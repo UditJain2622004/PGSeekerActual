@@ -2,7 +2,7 @@ import crypto from "crypto";
 import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
-import AppError from "../utils/appError";
+import AppError from "../utils/appError.js";
 import zxcvbn from "zxcvbn";
 import owasp from "owasp-password-strength-test";
 
@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
   },
   passwordConfirm: {
     type: String,
-    required: true,
+    required: [true, "Please confirm your Password."],
     validate: {
       // THIS WORKS ON SAVE AND CREATE ONLY, NOT ON UPDATE
       validator: function (el) {
@@ -66,6 +66,7 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: { type: Date, select: false },
   passwordResetToken: { type: String, select: false },
   passwordResetExpires: { type: Date, select: false },
+  refreshTokens: [String],
 
   // done above this
 
@@ -169,4 +170,4 @@ userSchema.index({ email: 1 });
 
 const User = mongoose.model("User", userSchema);
 
-module.exports = User;
+export default User;

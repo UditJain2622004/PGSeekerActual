@@ -80,7 +80,7 @@ export default (err, req, res, next) => {
     err = new AppError(response.message, 400);
   }
   //JWT Expire error
-  if (err.name === "Token Expired Error") {
+  if (err.name === "TokenExpiredError") {
     response.message += `Json Web Token is expired.`;
 
     // to mark this error as isOperational

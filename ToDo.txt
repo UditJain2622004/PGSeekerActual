@@ -1,54 +1,78 @@
 veg,non-veg food
-lowercase field values
 sharing and price mixed query
-min-max price query
+
+
+
 search by name  -- NO
-
-
-
 should user have a profile/photo??   -- NO
 should email be updated? (updateMe)  -- NO
 should a user be deleted? (deleteMe) -- NO
 
 
-***good tutorial bookmarked for showing errors in frontend
+*** Reminders
+protected access removed from reviewRouter,pgRouter
+taking user from req.body in reviewController(createReview,updateReview,deleteReview), set it back to req.user._id
+in getMe and updateMe, get user from req.user, currently getting from params
+updateMe and getMe still to be checked, not finalised
 
-login with google
-refresh token
-email confirmation
-mobile no confirmaion
+
+
+*** TODOs
+
+add sorting,pagination etc. to search pgs
+pgUpdate function(some fields should not be updated like reviews or ratings)
+maybe update searchPG function so as to make to sending data from frontend easy
+
 enum in address.state
-image validation
+image field validation in schema
 default ratings should be 0
 ratingsQuantity and average should not be set even if given in body
-improve reviews like review for different features of PG
 it should not be possible to give review 2 times on same PG. like if review given, there should be some indication on frontend that user has already reviewed it instead of letting user
 give review again and then show error (or maybe show an edit review option)
 gateClosingTimeValidation
-search pgs based on (nearby) places (maybe make spearate schema for places)
-set email sending gmail (config.env)
-change image upload folder name for actual uploads
-change git repository to private
+
+email
+
+pic upload
 improve image upload settings (like edit image before upload)
-official email on mongoDB Atlas and Cloudinary
-cors settings (app.js)
+delete uploaded images if error during creating pg
+
+login with google
+
+cron job to clear expired refreshTokens from db
+refresh token(what if user clear cookies)
+email confirmation
+mobile no confirmaion
+improve reviews like review for different features of PG
+search pgs based on (nearby) places (maybe make spearate schema for places)
 deleting pg and reviews on deleting user
 deleting reviews on deleting pg
+when refreshtoken is about to expire, show user a page login again there and then instead of logging him out
+remove unnecessary fields from response(select:false)(but select:false only prevents when queried, when we like create user and send it in
+response, select:false does not work)
+check if password encryption is okay
+test frontend , how it behaves on clearing cookies  or cache clearing etc. authcontroller.js functions uses cookies a lot
+
+
+
+
+
+set email sending gmail (config.env)
+change image upload folder name for actual uploads or maybe create a whole new cloudinary
+change git repository to private
+official email on mongoDB Atlas and Cloudinary
+cors settings (app.js)
 furnish app.js
-confirm email
-delete uploaded images if error during creating pg
 import only necessary functions from packages(for e.g only validator.isEmail not the complete validator package) (research if this actually enhances performance)
-
-
-location field
 decide which route to protect,restrict
-in reviews, taking pg id from url params(queryString), user id from user._id
+improve cookie
 
 
-pgownerid set in database
-restrictions removed from create pg route
+
 
 **Frontend
+clearFilters buttons
+good tutorial bookmarked for showing errors in frontend
 infinite scroll
 top loading bar
 propTypes

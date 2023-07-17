@@ -1,23 +1,25 @@
-import path from "path";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
 import express from "express";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import cors from "cors";
-
-// const pug = require("pug");
+import pug from "pug";
 
 import pgRouter from "./routes/pgRouter.js";
 import globalErrorHandler from "./controllers/errorController.js";
-// const pgRouter = require("./routes/pgrouter");
-// const reviewRouter = require("./routes/reviewRouter");
-// const userRouter = require("./routes/userRouter");
-// const globalErrorHandler = require("./controllers/errorController.js");
+import reviewRouter from "./routes/reviewRouter.js";
+import userRouter from "./routes/userRouter.js";
 
 const app = express();
 
-// app.set("view engine", "pug");
-// app.set("views", path.join(__dirname, "views"));
-// app.use(express.static(path.join(__dirname, "public")));
+// __dirname is not available in ES6 module. This is a work around that
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+app.set("view engine", "pug");
+app.set("views", path.join(__dirname, "views"));
+app.use(express.static(path.join(__dirname, "public")));
 
 // MIDDLEWARES
 const corsOptions = {
@@ -31,8 +33,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(express.json({ limit: "100kb" }));
 app.use("/api/v1/pg", pgRouter);
-// app.use("/api/v1/review", reviewRouter);
-// app.use("/api/v1/user", userRouter);
+app.use("/api/v1/review", reviewRouter);
+app.use("/api/v1/user", userRouter);
 
 app.use(globalErrorHandler);
 
