@@ -20,7 +20,10 @@ export default async (options) => {
   };
   // console.log(mailOptions);
   //   console.log(auth);
-  await transporter.sendMail(mailOptions);
+  await transporter.sendMail(mailOptions, (err, info) => {
+    if (err) console.log(err);
+    else console.log(info);
+  });
 };
 
 // sendEmail({

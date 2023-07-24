@@ -19,6 +19,17 @@ function capitalizeEachWord(sentence) {
   return capitalizedSentence;
 }
 
+export const createPgDocu = async (req, res, next) => {
+  try {
+    // console.log(req.body);
+    const pg = new PG(req.body);
+    console.log(pg);
+    await pg.validate();
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const createPgWithJSON = async (req, res, next) => {
   try {
     let prices = req.body.sharing?.map((el) => {
@@ -175,15 +186,27 @@ export const createPgDoc = async (req, res, next) => {
     req.body.address.locality = capitalizeEachWord(req.body.address.locality);
 
     // console.log(req.body);
-    prices = req.body.sharing.map((el) => el.price);
-    req.body.minPrice = Math.min(...prices);
-    req.body.maxPrice = Math.max(...prices);
+    let prices = req.body.sharing?.map((el) => {
+      // if price not defined for any sharing option we return 0 so that it does not give error when calculating minPrice,maxPrice
+      // otherwise it returns undefined which results in error when calculating minPrice,maxPrice using Math.min()
+      // so this is just to not let any error happen here bcz it is gonna happen in the schema eventually, which is handled well
+      if (!el.price) return 0;
+      return el.price;
+    });
+    if (prices) {
+      req.body.minPrice = Math.min(...prices);
+      req.body.maxPrice = Math.max(...prices);
+    }
     req.body.owner = req.body.userID;
     // req.body.address.locality = req.body.address.locality.toLowerCase();
     req.body.address.city = req.body.address.city.toLowerCase();
     req.body.address.state = req.body.address.state.toLowerCase();
     // req.body.pgType = req.body.pgType.toLowerCase();
     console.log(req.body);
+
+    // create pg doc. and validate it (not saving it yet, save after successful image upload)
+    const newPg = new PG(req.body);
+    await newPg.validate();
 
     // const newPg = await PG.create(req.body);
     // res.status(201).json({
@@ -281,48 +304,48 @@ export const deletePgById = async (req, res, next) => {
 
 export const searchPg = async (req, res, next) => {
   try {
-    console.log(req.body);
-    let queryObj = {};
-    if (req.body.city) {
-      queryObj["address.city"] = req.body.city.toLowerCase();
+    // console.log(req.body);
+    const { city, amenities, rules, pgType, food, sharing, price, sort } =
+      req.body;
+
+    const queryObj = {};
+    if (city) {
+      queryObj["address.city"] = city.toLowerCase();
     }
     // queryObj = {
     //   "address.city": req.body.city.toLowerCase(),
     // };
     //"pgAmenities.wifi": true, "pgAmenities.parking": true }
-    if (req.body.amenities && req.body.amenities.length > 0) {
-      req.body.amenities.forEach((el) => {
-        queryObj[`pgAmenities.${el}`] = true;
+    if (amenities?.length > 0) {
+      amenities.forEach((el) => {
+        queryObj[`amenities.${el}`] = true;
       });
     }
-    if (req.body.rules) {
-      req.body.rules.forEach((el) => {
-        queryObj[`pgRules.${el}`] = true;
+    if (rules?.length > 0) {
+      rules.forEach((el) => {
+        queryObj[`rules.${el}`] = true;
       });
     }
 
     //{ pgType: { $in: ["male", "female", "mixed"] } }
-    if (req.body.pgType && req.body.pgType.length > 0) {
-      queryObj.pgType = { $in: req.body.pgType };
+    if (pgType?.length > 0) {
+      queryObj.pgType = { $in: pgType };
     }
-    if (req.body.food) {
-      queryObj.food = { $in: req.body.food };
+    if (food) {
+      queryObj.food = { $in: food };
     }
     //{ 'sharing.occupancy': { $in: [2, 3, 4] } }
-    if (req.body.sharing && req.body.sharing.length > 0) {
-      req.body.sharing = req.body.sharing.map((el) => el * 1);
-      queryObj["sharing.occupancy"] = { $in: req.body.sharing };
+    if (sharing?.length > 0) {
+      const occupancyValues = sharing.map((el) => parseInt(el));
+      queryObj["sharing.occupancy"] = { $in: occupancyValues };
     }
 
     //{$and: [{ minPrice: { $gte: 5000 } }, { maxPrice: { $lte: 7500 } }],
-    if (req.body.price && req.body.price.length > 0) {
+    if (price?.length === 2) {
+      const [minPrice, maxPrice] = price.map((el) => parseInt(el));
       queryObj.$or = [
-        {
-          minPrice: { $gte: req.body.price[0], $lte: req.body.price[1] },
-        },
-        {
-          maxPrice: { $gte: req.body.price[0], $lte: req.body.price[1] },
-        },
+        { minPrice: { $gte: minPrice, $lte: maxPrice } },
+        { maxPrice: { $gte: minPrice, $lte: maxPrice } },
       ];
     }
 
@@ -339,7 +362,9 @@ export const searchPg = async (req, res, next) => {
     // const skip = (page - 1) * limit;
     // query = query.skip(skip).limit(limit);
 
-    let pgs = await query;
+    let pgs = await query.lean();
+
+    pgs = modifySearchedPgs(pgs, { amenities, rules, sharing }, next);
 
     res.status(200).json({
       status: "success",
@@ -348,6 +373,97 @@ export const searchPg = async (req, res, next) => {
         pgs: pgs,
       },
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const modifySearchedPgs = (pgs, filters, next) => {
+  try {
+    console.log(filters);
+    const modifiedPgs = [];
+    pgs.forEach((pg) => {
+      if (pg.amenities) {
+        // filters amenity names whose value is true
+        const availableAmenities = Object.keys(pg.amenities).filter(
+          (el) => pg.amenities[el]
+        );
+
+        // reordering amenities with amenities ,that user filtered for, comes first
+        if (filters.amenities) {
+          // first add the amenities that user filtered for
+          const modifiedAmenities = [...filters.amenities];
+
+          // add remaining amenities for the pg
+          availableAmenities.forEach((el) => {
+            if (!modifiedAmenities.includes(el)) modifiedAmenities.push(el);
+          });
+          pg.amenities = modifiedAmenities;
+        }
+        // if no amenities filter applied, simply put availableAmenities
+        else {
+          pg.amenities = availableAmenities;
+        }
+      }
+
+      if (pg.rules) {
+        // filters rule names whose value is true
+        const availableRules = Object.keys(pg.rules).filter(
+          (el) => pg.rules[el]
+        );
+
+        // reordering rules with rules ,that user filtered for, comes first
+        if (filters.rules) {
+          // first add the rules that user filteres for
+          const modifiedRules = [...filters.rules];
+
+          // add remaining rules for the pg
+          availableRules.forEach((el) => {
+            if (!modifiedRules.includes(el)) modifiedRules.push(el);
+          });
+          pg.rules = modifiedRules;
+          // console.log(availableRules);
+          // console.log(modifiedRules);
+        }
+        // if no rules filter applied, simply put availableRules
+        else {
+          console.log(availableRules);
+          pg.rules = availableRules;
+        }
+      }
+
+      // reordering sharing options with occupancy ,that user filtered for, comes first
+      if (filters.sharing) {
+        let modifiedSharing = [];
+
+        // runs for each occupancy value that user filtered for
+        filters.sharing.forEach((occupancy) => {
+          // first add sharing options where occupancy value is equal to value user filtered for
+          pg.sharing.forEach((sharing) => {
+            if (sharing.occupancy === parseInt(occupancy))
+              modifiedSharing.push(sharing);
+          });
+        });
+
+        // then add remaining sharing options available in the pg
+        pg.sharing.forEach((el) => {
+          if (!modifiedSharing.includes(el)) modifiedSharing.push(el);
+        });
+
+        if (filters.amenities.includes("ac")) {
+          const withAC = modifiedSharing.filter((el) => el.ac);
+          const withoutAC = modifiedSharing.filter((el) => !el.ac);
+          modifiedSharing = [...withAC, ...withoutAC];
+        }
+        pg.sharing = modifiedSharing;
+        console.log(modifiedSharing);
+      }
+      //   console.log(pg);
+      modifiedPgs.push(pg);
+    });
+    // modifiedPgs.forEach((el) => console.log(el.sharing));
+    // console.log(modifiedPgs);
+    return modifiedPgs;
   } catch (err) {
     next(err);
   }

@@ -4,10 +4,10 @@ import * as authController from "./../controllers/authController.js";
 
 const router = express.Router({ mergeParams: true });
 
-router.route("/pg/:pgID").get(reviewController.getAllReviews).post(
-  // authController.protect,
-  reviewController.createReview
-);
+router
+  .route("/pg/:pgID")
+  .get(reviewController.getAllReviews)
+  .post(authController.protect, reviewController.createReview);
 
 router
   .route("/:id")

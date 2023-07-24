@@ -5,17 +5,23 @@ import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import cors from "cors";
 import pug from "pug";
+import passport from "passport";
 
 import pgRouter from "./routes/pgRouter.js";
 import globalErrorHandler from "./controllers/errorController.js";
 import reviewRouter from "./routes/reviewRouter.js";
 import userRouter from "./routes/userRouter.js";
 
+// import passport configuration
+import "./utils/passport.js";
+
 const app = express();
 
 // __dirname is not available in ES6 module. This is a work around that
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+app.use(passport.initialize());
 
 app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "views"));

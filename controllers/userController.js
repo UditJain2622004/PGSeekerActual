@@ -2,14 +2,15 @@ import express from "express";
 import AppError from "./../utils/appError.js";
 import User from "./../models/userModel.js";
 import PG from "./../models/pgModel.js";
+import { filterObj } from "../utils/utils.js";
 
-const filterObj = (obj, allowedFields) => {
-  const newObj = {};
-  Object.keys(obj).forEach((el) => {
-    if (allowedFields.includes(el)) newObj[el] = obj[el];
-  });
-  return newObj;
-};
+// const filterObj = (obj, allowedFields) => {
+//   const newObj = {};
+//   Object.keys(obj).forEach((el) => {
+//     if (allowedFields.includes(el)) newObj[el] = obj[el];
+//   });
+//   return newObj;
+// };
 
 export const updateMe = async (req, res, next) => {
   try {
@@ -51,6 +52,7 @@ export const getMe = async (req, res, next) => {
   try {
     const pgs = await PG.find({ pgOwner: req.user._id });
     req.pgs = pgs;
+    req.params.id = req.user._id;
     next();
   } catch (err) {
     next(err);

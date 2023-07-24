@@ -2,6 +2,8 @@ import express from "express";
 import AppError from "./../utils/appError.js";
 import Review from "./../models/reviewModel.js";
 
+import { filterObj } from "../utils/utils.js";
+
 export const getAllReviews = async (req, res, next) => {
   try {
     let filter = {};
@@ -24,9 +26,10 @@ export const getAllReviews = async (req, res, next) => {
 
 export const createReview = async (req, res, next) => {
   try {
-    req.body.pg = req.params.pgID;
-    // req.body.user = req.user._id;
-    const newReview = await Review.create(req.body);
+    const data = filterObj(req.body, ["rating", "review"]);
+    data.pg = req.params.pgID;
+    data.user = req.user._id;
+    const newReview = await Review.create(data);
     res.status(201).json({
       status: "success",
       data: {
@@ -60,8 +63,8 @@ export const updateReviewById = async (req, res, next) => {
     const review = await Review.findOneAndUpdate(
       {
         _id: req.params.id,
-        user: req.body.user,
-        // user: req.user._id,
+        // user: req.body.user,
+        user: req.user._id,
       },
       req.body,
       { runValidators: true, new: true }
@@ -84,8 +87,8 @@ export const deleteReviewById = async (req, res, next) => {
   try {
     const review = await Review.findOneAndDelete({
       _id: req.params.id,
-      user: req.body.user,
-      //   user: req.user._id,
+      // user: req.body.user,
+      user: req.user._id,
     });
 
     if (!review) return next(new AppError("Invalid Request", 400));

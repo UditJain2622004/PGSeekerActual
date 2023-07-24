@@ -90,7 +90,7 @@ const signRefreshToken = (id) => {
   });
 };
 
-const createSendToken = async (user, statusCode, req, res, next) => {
+export const createSendToken = async (user, statusCode, req, res, next) => {
   try {
     console.log(user);
     const accessToken = signAccessToken(user._id);
@@ -310,6 +310,7 @@ const generateNewAccessToken = async (req, res, next) => {
       // CAN ALSO PUT A CHECK IF THE REFRESH TOKEN EXISTS IN THE USER DOCUMENT ASO
     } catch (err) {
       if (err.name === "TokenExpiredError") {
+        console.log("Refresh token expired");
         // If the refresh token is expired, remove it from the user's refreshTokens array
         // if token expired, decoded will be undefined bcz it uses jwt.verify
         // so we use jwt.decode() to get info. inside jwt without verifying it

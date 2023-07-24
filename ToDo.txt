@@ -36,8 +36,13 @@ email
 pic upload
 improve image upload settings (like edit image before upload)
 delete uploaded images if error during creating pg
+image comes with google OAuth. add to user doc if ever make image field for user (passport.js file)
 
-login with google
+login with google(success,failure redirects mixup, test thoroughly after frontend)(userRouter.js)
+split filtering between frontend and backend. (basic filters on frontend and complex on backend)
+add nearbyPlaces to filters (but need suggestions system first for suggesting localities, places names etc.)
+(lot of loops in modifySearchedPg function, try to minimise them)
+
 
 cron job to clear expired refreshTokens from db
 refresh token(what if user clear cookies)
@@ -77,3 +82,29 @@ infinite scroll
 top loading bar
 propTypes
 defaultProps
+
+
+
+
+{
+    "name":"Test PG",
+    "description":"Nice",
+    "address":{
+        "locality":"Sirsa",
+        "city":"Sirsa",
+        "state":"Haryana",
+        "pincode":123456
+    },
+    "pgType":"male",
+    "sharing":[{"occupancy":1,"price":8000}],
+    "nearbyPlaces":[{"placeName":"railway station","distance":100}],
+    "amenities":[{"wifi":true,"tv":true}],
+    "rules":[{"guests":true,"noticePeriodDays":10,"securityDeposit":2500,"gateClosingTime":"22:00"}],
+    "owner":"64a6ea510466307e5f1a1572",
+    "noticePeriodDays":2,
+    "securityDeposit":5,
+    "contact":{"phone":1234567980,"email":"acb@gmail.com"},
+    "gateClosingTime":"22:00",
+    "location":{"coordinates":[40,12]}
+
+}
