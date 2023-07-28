@@ -22,13 +22,13 @@ router
   .route("/:id")
   .get(pgController.getPgById)
   .patch(
-    // authcontroller.protect,
-    // authcontroller.restrictTo("pgOwner", "admin"),
+    authController.protect,
+    // authController.restrictTo("pgOwner", "admin"),
     pgController.updatePgById
   )
   .delete(
-    // authcontroller.protect,
-    // authcontroller.restrictTo("pgOwner", "admin"),
+    // authController.protect,
+    // authController.restrictTo("pgOwner", "admin"),
     pgController.deletePgById
   );
 

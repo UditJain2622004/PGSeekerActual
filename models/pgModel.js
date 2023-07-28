@@ -181,6 +181,7 @@ const pgSchema = new mongoose.Schema(
 
     images: {
       type: [String],
+      // required:true,
       // validate: {
       //   validator: function (array) {
       //     return array.length >= 1;
@@ -220,7 +221,7 @@ const pgSchema = new mongoose.Schema(
 
     ratingsAverage: {
       type: Number,
-      default: 4,
+      default: 0,
       set: (val) => Math.round(val * 10) / 10,
     },
     ratingsQuantity: {
@@ -242,15 +243,39 @@ const pgSchema = new mongoose.Schema(
   }
 );
 
+// works only when called .save() explictly. or maybe with .create() also. DOES NOT work for findOneAnd... functions.
 pgSchema.pre("save", function (next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
 
+// if location is not given, coordinates will be undefined but the "type" field will set to "Point" bcz of default value
+// which will give error if tr to save without coordinates. So we clear the locationn field completely.
 pgSchema.pre("save", function (next) {
   if (!this.location.coordinates) {
     this.location = undefined;
   }
+  next();
+});
+
+// to update minprice, maxprice on updating sharing field
+pgSchema.pre(/^findOneAnd/, function (next) {
+  // "this" refers to the query object
+  // so we check if the sharing field is present in the "_update" field of query
+  if (this._update.sharing) {
+    const sharingPrices = this._update.sharing.map((option) => option.price);
+    console.log(sharingPrices);
+    // the "_update" field is the field containing updates to doc. So we add minPrice and maxPrice updates to this field
+    this._update.minPrice = Math.min(...sharingPrices);
+    this._update.maxPrice = Math.max(...sharingPrices);
+  }
+
+  // if name is updated , update the slug also
+  if (this._update.name) {
+    this._update.slug = slugify(this._update.name, { lower: true });
+  }
+
+  // console.log(this);
   next();
 });
 

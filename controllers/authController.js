@@ -48,33 +48,33 @@ const verifyAccessToken = async (req, res, next, accessToken) => {
     return decoded;
   } catch (err) {
     // if accessToken expired, generate new accessToken using refreshToken
-    // console.log(err);
-    if (err.name === "TokenExpiredError") {
-      console.log("Generating new Access Token...");
-      const newAccessToken = await generateNewAccessToken(req, res, next);
-      // if no response from refreshToken function, means refresh token is also expired or invalid
-      if (!newAccessToken) {
-        // next(
-        //   new AppError("Your session has expired. Please log in again.", 401)
-        // );
-        // return null;
-
-        //prettier-ignore
-        const errorA = new Error("Your session has expired. Please log in again.");
-        throw errorA;
-      }
-      const decoded = await util.promisify(jwt.verify)(
-        newAccessToken,
-        process.env.ACCESS_TOKEN_SECRET
-      );
-      return decoded;
-    } else {
-      //prettier-ignore
-      const errorB = new Error("Your session has expired. Please log in again.");
-      throw errorB;
-      // next(new AppError("Invalid token.", 401));
+    console.log("Generating new Access Token...");
+    const newAccessToken = await generateNewAccessToken(req, res, next);
+    // if no response from refreshToken function, means refresh token is also expired or invalid
+    if (!newAccessToken) {
+      // next(
+      //   new AppError("Your session has expired. Please log in again.", 401)
+      // );
       // return null;
+
+      //prettier-ignore
+      const errorA = new Error("Your session has expired. Please log in again.");
+      throw errorA;
     }
+    const decoded = await util.promisify(jwt.verify)(
+      newAccessToken,
+      process.env.ACCESS_TOKEN_SECRET
+    );
+    return decoded;
+    // if (err.name === "TokenExpiredError") {
+    // generate new accessToken
+    // } else {
+    //   //prettier-ignore
+    //   const errorB = new Error("Invalid Token.");
+    //   throw errorB;
+    //   // next(new AppError("Invalid token.", 401));
+    //   // return null;
+    // }
   }
 };
 
@@ -225,9 +225,10 @@ export const logout = async (req, res, next) => {
 
 export const protect = async (req, res, next) => {
   try {
-    let token = req.cookies?.accessToken;
+    let accessToken = req.cookies?.accessToken;
+    let refreshToken = req.cookies.refreshToken;
 
-    if (!token) {
+    if (!accessToken && !refreshToken) {
       return next(
         new AppError("You are not logged in. Please log in to get access.", 401)
       );
@@ -261,7 +262,7 @@ export const protect = async (req, res, next) => {
     // }
     let decoded;
     try {
-      decoded = await verifyAccessToken(req, res, next, token);
+      decoded = await verifyAccessToken(req, res, next, accessToken);
     } catch (error) {
       return next(new AppError(error.message, 401));
     }

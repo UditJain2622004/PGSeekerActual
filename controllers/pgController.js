@@ -4,20 +4,7 @@ import cloudinary from "cloudinary";
 
 import AppError from "../utils/appError.js";
 import PG from "./../models/pgModel.js";
-
-function capitalizeEachWord(sentence) {
-  const words = sentence.split(" ");
-
-  const capitalizedWords = words.map((word) => {
-    const firstLetter = word.charAt(0).toUpperCase();
-    const restLetters = word.slice(1).toLowerCase();
-    return firstLetter + restLetters;
-  });
-
-  const capitalizedSentence = capitalizedWords.join(" ");
-
-  return capitalizedSentence;
-}
+import { filterObj, removeFalseValues } from "../utils/utils.js";
 
 export const createPgDocu = async (req, res, next) => {
   try {
@@ -173,19 +160,17 @@ const wait = (ms) => {
 
 export const createPgDoc = async (req, res, next) => {
   try {
-    req.body.amenities = JSON.parse(req.body.pgAmenities);
-    req.body.sharing = JSON.parse(req.body.sharing);
-    req.body.address = JSON.parse(req.body.address);
-    req.body.contact = JSON.parse(req.body.pgContactInfo);
-    req.body.rules = JSON.parse(req.body.pgRules);
-    req.body.noticePeriodDays = req.body.noticePeriodDays * 1;
-    req.body.securityDeposit = req.body.securityDeposit * 1;
-    req.body.address.pincode = req.body.address.pincode * 1;
-    // To capitalize each word
-    req.body.name = capitalizeEachWord(req.body.name);
-    req.body.address.locality = capitalizeEachWord(req.body.address.locality);
+    // req.body.amenities = JSON.parse(req.body.pgAmenities);
+    // req.body.sharing = JSON.parse(req.body.sharing);
+    // req.body.address = JSON.parse(req.body.address);
+    // req.body.contact = JSON.parse(req.body.pgContactInfo);
+    // req.body.rules = JSON.parse(req.body.pgRules);
+    // req.body.noticePeriodDays = req.body.noticePeriodDays * 1;
+    // req.body.securityDeposit = req.body.securityDeposit * 1;
+    // req.body.address.pincode = req.body.address.pincode * 1;
+    // req.body.name = capitalizeEachWord(req.body.name);
+    // req.body.address.locality = capitalizeEachWord(req.body.address.locality);
 
-    // console.log(req.body);
     let prices = req.body.sharing?.map((el) => {
       // if price not defined for any sharing option we return 0 so that it does not give error when calculating minPrice,maxPrice
       // otherwise it returns undefined which results in error when calculating minPrice,maxPrice using Math.min()
@@ -197,24 +182,17 @@ export const createPgDoc = async (req, res, next) => {
       req.body.minPrice = Math.min(...prices);
       req.body.maxPrice = Math.max(...prices);
     }
-    req.body.owner = req.body.userID;
-    // req.body.address.locality = req.body.address.locality.toLowerCase();
-    req.body.address.city = req.body.address.city.toLowerCase();
-    req.body.address.state = req.body.address.state.toLowerCase();
-    // req.body.pgType = req.body.pgType.toLowerCase();
-    console.log(req.body);
+    // req.body.owner = req.body.userID;
 
     // create pg doc. and validate it (not saving it yet, save after successful image upload)
-    const newPg = new PG(req.body);
+    const data = filterObj(
+      req.body,
+      ["updated", "ratingsAverage", "ratingsQuantity"],
+      true
+    );
+    const newPg = new PG(data);
     await newPg.validate();
-
-    // const newPg = await PG.create(req.body);
-    // res.status(201).json({
-    //   status: "success",
-    //   data: {
-    //     Pg: newPg,
-    //   },
-    // });
+    req.newPg = newPg;
     next();
   } catch (err) {
     next(err);
@@ -223,7 +201,7 @@ export const createPgDoc = async (req, res, next) => {
 
 export const createPg = async (req, res, next) => {
   try {
-    const newPg = await PG.create(req.body);
+    const newPg = await req.newPg.save();
 
     const response = {
       status: "success",
@@ -262,10 +240,20 @@ export const getPgById = async (req, res, next) => {
 
 export const updatePgById = async (req, res, next) => {
   try {
+    // more data, 1 call to Database
+    // send all subfields of a field, updated as well as not updated
+    // for e.g , if address.locality is updated, we also need to send other subfields of address like city,state,pincode
     req.body.updated = Date.now();
-    const pg = await PG.findOneAndUpdate(
-      { _id: req.params.id, pgOwner: req.user._id },
+    const updates = filterObj(
       req.body,
+      //prettier-ignore
+      ["owner","updated","minPrice","maxPrice","ratingsAverage","ratingsQuantity"],
+      true
+    );
+
+    const pg = await PG.findOneAndUpdate(
+      { _id: req.params.id, owner: req.user._id },
+      updates,
       {
         runValidators: true,
         new: true,
@@ -284,12 +272,69 @@ export const updatePgById = async (req, res, next) => {
     next(err);
   }
 };
+// export const updatePgById2 = async (req, res, next) => {
+//   try {
+//     // less data, 2 call to Database
+//     // send only updated fields and subfields
+//     const updates = filterObj(
+//       req.body,
+//       //prettier-ignore
+//       ["owner","updated","minPrice","maxPrice","ratingsAverage","ratingsQuantity","sharing"],
+//       true
+//     );
+
+//     const pg = await PG.findOne({ _id: req.params.id, owner: req.user._id });
+
+//     if (!pg) return next(new AppError("Invalid Request", 400));
+//     pg.updated = Date.now();
+
+//     if (req.body.sharing) {
+//       req.body.sharing.forEach((el) => {
+//         pg.sharing.forEach((option) => {
+//           if (option.id.toString() === el.id) {
+//             option.occupancy = el.occupancy || option.occupancy;
+//             option.price = el.price || option.price;
+//             option.ac = el.ac ?? option.ac;
+//           }
+//         });
+//         // if (sharingOption) sharingOption = { sharingOption, ...el };
+//       });
+//     }
+
+//     Object.keys(updates).forEach((field) => {
+//       // console.log(pg[field], typeof pg[field]);
+//       if (typeof pg[field] === "object") {
+//         console.log(pg[field]);
+//         console.log(updates[field]);
+//         Object.keys(updates[field]).forEach((el) => {
+//           console.log(el);
+//           pg[field][el] = updates[field][el];
+//         });
+//         // console.log({ ...pg[field], ...updates[field] });
+//         // pg[field] = { ...pg[field], ...updates[field] };
+//       } else {
+//         pg[field] = updates[field];
+//       }
+//     });
+
+//     console.log(pg);
+
+//     res.status(200).json({
+//       status: "success",
+//       data: {
+//         pg: pg,
+//       },
+//     });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 
 export const deletePgById = async (req, res, next) => {
   try {
     const pg = await PG.findOneAndDelete({
       _id: req.params.id,
-      pgOwner: req.user._id,
+      owner: req.user._id,
     });
 
     if (!pg) return next(new AppError("Invalid Request", 400));
@@ -312,32 +357,48 @@ export const searchPg = async (req, res, next) => {
     if (city) {
       queryObj["address.city"] = city.toLowerCase();
     }
-    // queryObj = {
-    //   "address.city": req.body.city.toLowerCase(),
-    // };
-    //"pgAmenities.wifi": true, "pgAmenities.parking": true }
-    if (amenities?.length > 0) {
-      amenities.forEach((el) => {
-        queryObj[`amenities.${el}`] = true;
-      });
-    }
-    if (rules?.length > 0) {
-      rules.forEach((el) => {
-        queryObj[`rules.${el}`] = true;
-      });
-    }
 
-    //{ pgType: { $in: ["male", "female", "mixed"] } }
-    if (pgType?.length > 0) {
-      queryObj.pgType = { $in: pgType };
+    if (amenities) {
+      Object.keys(amenities).forEach((el) => {
+        if (amenities[el]) queryObj[`amenities.${el}`] = true;
+      });
     }
+    if (rules) {
+      Object.keys(rules).forEach((el) => {
+        if (rules[el]) queryObj[`rules.${el}`] = true;
+      });
+    }
+    if (pgType) {
+      queryObj.pgType = { $in: removeFalseValues(pgType) };
+    }
+    if (sharing) {
+      let sharingValue = removeFalseValues(sharing);
+      sharingValue = sharingValue.map((el) => el * 1);
+      queryObj["sharing.occupancy"] = { $in: sharingValue };
+    }
+    // if (amenities?.length > 0) {
+    // amenities.forEach((el) => {
+    //   queryObj[`amenities.${el}`] = true;
+    // });
+    // }
+
+    // if (rules?.length > 0) {
+    //   rules.forEach((el) => {
+    //     queryObj[`rules.${el}`] = true;
+    //   });
+    // }
+
+    // if (pgType?.length > 0) {
+    //   queryObj.pgType = { $in: pgType };
+    // }
+
+    // if (sharing?.length > 0) {
+    //   const occupancyValues = sharing.map((el) => parseInt(el));
+    //   queryObj["sharing.occupancy"] = { $in: occupancyValues };
+    // }
+
     if (food) {
       queryObj.food = { $in: food };
-    }
-    //{ 'sharing.occupancy': { $in: [2, 3, 4] } }
-    if (sharing?.length > 0) {
-      const occupancyValues = sharing.map((el) => parseInt(el));
-      queryObj["sharing.occupancy"] = { $in: occupancyValues };
     }
 
     //{$and: [{ minPrice: { $gte: 5000 } }, { maxPrice: { $lte: 7500 } }],
@@ -349,7 +410,6 @@ export const searchPg = async (req, res, next) => {
       ];
     }
 
-    console.log(req.body);
     console.log(queryObj);
 
     let query = PG.find(queryObj);
@@ -357,10 +417,13 @@ export const searchPg = async (req, res, next) => {
     //SORTING
     query = query.sort({ minPrice: req.body.sort || 1 });
     //PAGINATION
-    // const page = req.query.page * 1 || 1;
-    // const limit = req.query.limit * 1 || 50;
-    // const skip = (page - 1) * limit;
-    // query = query.skip(skip).limit(limit);
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 20;
+    const skip = (page - 1) * limit;
+    query = query
+      .skip(skip)
+      .limit(limit)
+      .select("amenities rules sharing -_id");
 
     let pgs = await query.lean();
 
@@ -389,10 +452,10 @@ const modifySearchedPgs = (pgs, filters, next) => {
           (el) => pg.amenities[el]
         );
 
-        // reordering amenities with amenities ,that user filtered for, comes first
+        // reordering amenities with amenities that user filtered for, coming first
         if (filters.amenities) {
           // first add the amenities that user filtered for
-          const modifiedAmenities = [...filters.amenities];
+          const modifiedAmenities = [...Object.keys(filters.amenities)];
 
           // add remaining amenities for the pg
           availableAmenities.forEach((el) => {
@@ -415,7 +478,7 @@ const modifySearchedPgs = (pgs, filters, next) => {
         // reordering rules with rules ,that user filtered for, comes first
         if (filters.rules) {
           // first add the rules that user filteres for
-          const modifiedRules = [...filters.rules];
+          const modifiedRules = [...Object.keys(filters.rules)];
 
           // add remaining rules for the pg
           availableRules.forEach((el) => {
@@ -427,7 +490,7 @@ const modifySearchedPgs = (pgs, filters, next) => {
         }
         // if no rules filter applied, simply put availableRules
         else {
-          console.log(availableRules);
+          // console.log(availableRules);
           pg.rules = availableRules;
         }
       }
@@ -437,26 +500,39 @@ const modifySearchedPgs = (pgs, filters, next) => {
         let modifiedSharing = [];
 
         // runs for each occupancy value that user filtered for
-        filters.sharing.forEach((occupancy) => {
+        Object.keys(filters.sharing).forEach((occupancy) => {
           // first add sharing options where occupancy value is equal to value user filtered for
           pg.sharing.forEach((sharing) => {
             if (sharing.occupancy === parseInt(occupancy))
-              modifiedSharing.push(sharing);
+              if (filters.amenities?.ac && sharing.ac) {
+                // if filtered by "ac", put sharing options with ac first
+                modifiedSharing.unshift(sharing);
+              } else {
+                modifiedSharing.push(sharing);
+              }
           });
         });
 
         // then add remaining sharing options available in the pg
-        pg.sharing.forEach((el) => {
-          if (!modifiedSharing.includes(el)) modifiedSharing.push(el);
+        const remainingSharing = [];
+        pg.sharing.forEach((sharing) => {
+          if (!modifiedSharing.includes(sharing)) {
+            // if filtered by "ac", put sharing options with ac first
+            if (filters.amenities?.ac && sharing.ac) {
+              remainingSharing.unshift(sharing);
+            } else {
+              remainingSharing.push(sharing);
+            }
+          }
         });
 
-        if (filters.amenities.includes("ac")) {
-          const withAC = modifiedSharing.filter((el) => el.ac);
-          const withoutAC = modifiedSharing.filter((el) => !el.ac);
-          modifiedSharing = [...withAC, ...withoutAC];
-        }
-        pg.sharing = modifiedSharing;
-        console.log(modifiedSharing);
+        // if (filters.amenities?.ac) {
+        //   const withAC = modifiedSharing.filter((el) => el.ac);
+        //   const withoutAC = modifiedSharing.filter((el) => !el.ac);
+        //   modifiedSharing = [...withAC, ...withoutAC];
+        // }
+        pg.sharing = [...modifiedSharing, ...remainingSharing];
+        // console.log(modifiedSharing);
       }
       //   console.log(pg);
       modifiedPgs.push(pg);

@@ -11,52 +11,56 @@ should a user be deleted? (deleteMe) -- NO
 
 *** Reminders
 protected access removed from reviewRouter,pgRouter
-taking user from req.body in reviewController(createReview,updateReview,deleteReview), set it back to req.user._id
-in getMe and updateMe, get user from req.user, currently getting from params
-updateMe and getMe still to be checked, not finalised
-
+* Pagination and limit(no. of docs on 1 page) added.  (Have to provide in query string,  localhost:5000/api/v1/pg/search?page=1&limit=20)
+  page=1 and limit = 20 are set by default
 
 
 *** TODOs
 
-add sorting,pagination etc. to search pgs
-pgUpdate function(some fields should not be updated like reviews or ratings)
-maybe update searchPG function so as to make to sending data from frontend easy
 
-enum in address.state
+
+
 image field validation in schema
-default ratings should be 0
-ratingsQuantity and average should not be set even if given in body
-it should not be possible to give review 2 times on same PG. like if review given, there should be some indication on frontend that user has already reviewed it instead of letting user
-give review again and then show error (or maybe show an edit review option)
+enum in address.state
 gateClosingTimeValidation
 
-email
 
-pic upload
-improve image upload settings (like edit image before upload)
-delete uploaded images if error during creating pg
-image comes with google OAuth. add to user doc if ever make image field for user (passport.js file)
-
-login with google(success,failure redirects mixup, test thoroughly after frontend)(userRouter.js)
-split filtering between frontend and backend. (basic filters on frontend and complex on backend)
-add nearbyPlaces to filters (but need suggestions system first for suggesting localities, places names etc.)
-(lot of loops in modifySearchedPg function, try to minimise them)
+* updatePG function(the one with more data, 1 call to db has to be modified according to data coming from frontend, the other one doesn't work)
+* a pre \findOneAnd\ hook is defined to update minPrice, maxPrice on updating pg and sharing field, bcz currently updating pg 
+  using findOneAndUpdate. If it changes, have to change the hook too
 
 
-cron job to clear expired refreshTokens from db
-refresh token(what if user clear cookies)
-email confirmation
-mobile no confirmaion
-improve reviews like review for different features of PG
-search pgs based on (nearby) places (maybe make spearate schema for places)
-deleting pg and reviews on deleting user
-deleting reviews on deleting pg
-when refreshtoken is about to expire, show user a page login again there and then instead of logging him out
-remove unnecessary fields from response(select:false)(but select:false only prevents when queried, when we like create user and send it in
-response, select:false does not work)
-check if password encryption is okay
-test frontend , how it behaves on clearing cookies  or cache clearing etc. authcontroller.js functions uses cookies a lot
+* email
+
+
+* pic upload
+* improve image upload settings (like edit image before upload)
+* image update (adding, removing images)
+* delete uploaded images if error during creating pg
+* image comes with google OAuth. add to user doc if ever make image field for user (passport.js file)
+
+
+* login with google(success,failure redirects mixup, test thoroughly after frontend)(userRouter.js)
+* split filtering between frontend and backend. (basic filters on frontend and complex on backend)
+* add nearbyPlaces to filters (but need suggestions system first for suggesting localities, places names etc.)
+
+
+* lot of loops in modifySearchedPg function, try to minimise them
+* carefully try to use .lean() after queries to convert mongoose doc to somple js object. BUT, remember, mongoose methos won't be 
+  available after that
+* cron job to clear expired refreshTokens from db
+* refresh token(what if user clear cookies)
+* email confirmation
+* mobile no confirmaion
+* improve reviews like review for different features of PG
+* search pgs based on (nearby) places (maybe make spearate schema for places)
+* deleting pg and reviews on deleting user
+* deleting reviews on deleting pg
+* when refreshtoken is about to expire or has just expired, show user a page login again there and then instead of logging him out
+* remove unnecessary fields from response(select:false)(but select:false only prevents when queried, when we like create user and 
+  send it in response, select:false does not work)
+* check if password encryption is okay
+* test frontend , how it behaves on clearing cookies  or cache clearing etc. authcontroller.js functions uses cookies a lot
 
 
 
@@ -70,7 +74,7 @@ cors settings (app.js)
 furnish app.js
 import only necessary functions from packages(for e.g only validator.isEmail not the complete validator package) (research if this actually enhances performance)
 decide which route to protect,restrict
-improve cookie
+improve cookie settings (httpOnly,secure etc.)
 
 
 
@@ -82,7 +86,9 @@ infinite scroll
 top loading bar
 propTypes
 defaultProps
-
+it should not be possible to give review 2 times on same PG. like if review given, there should be some indication on frontend that user has already reviewed it instead of letting user
+give review again and then show error (or maybe show an edit review option)
+sharing filter getting cleared when go to a pg detail page and come back to listing page
 
 
 
