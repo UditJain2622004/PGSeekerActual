@@ -27,11 +27,11 @@ mongoose
 
 import app from "./app.js";
 
-// cloudinary.config({
-//   cloud_name: process.env.ClOUDINARY_NAME,
-//   api_key: process.env.ClOUDINARY_API_KEY,
-//   api_secret: process.env.CLOUDINARY_API_SECRET,
-// });
+cloudinary.config({
+  cloud_name: process.env.ClOUDINARY_NAME,
+  api_key: process.env.ClOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const server = app.listen(process.env.PORT, () => {
   console.log("Server started on port 5000");

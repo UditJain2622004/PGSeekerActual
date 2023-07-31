@@ -1,3 +1,5 @@
+import { nanoid } from "nanoid/async";
+
 const modifySearchedPgs = (pgs, filters, next) => {
   try {
     const modifiedPgs = [];
@@ -71,122 +73,141 @@ const modifySearchedPgs = (pgs, filters, next) => {
   }
 };
 
-modifySearchedPgs(
-  [
-    {
-      name: "Hlo",
-      sharing: [
-        {
-          occupancy: 1,
-          price: 8000,
-          ac: false,
-          _id: "64bd6f8a89ec4e5a16b2de8a",
-        },
-        {
-          occupancy: 2,
-          price: 8000,
-          ac: false,
-          _id: "64bd6f8a89ec4e5a16b2de8a",
-        },
-        {
-          occupancy: 2,
-          price: 8000,
-          ac: false,
-          _id: "64bd6f8a89ec4e5a16b2de8a",
-        },
-        {
-          occupancy: 3,
-          price: 8000,
-          ac: false,
-          _id: "64bd6f8a89ec4e5a16b2de8a",
-        },
-        {
-          occupancy: 3,
-          price: 10000,
-          ac: true,
-          _id: "64bd6f8a89ec4e5a16b2de8a",
-        },
-      ],
+// modifySearchedPgs(
+//   [
+//     {
+//       name: "Hlo",
+//       sharing: [
+//         {
+//           occupancy: 1,
+//           price: 8000,
+//           ac: false,
+//           _id: "64bd6f8a89ec4e5a16b2de8a",
+//         },
+//         {
+//           occupancy: 2,
+//           price: 8000,
+//           ac: false,
+//           _id: "64bd6f8a89ec4e5a16b2de8a",
+//         },
+//         {
+//           occupancy: 2,
+//           price: 8000,
+//           ac: false,
+//           _id: "64bd6f8a89ec4e5a16b2de8a",
+//         },
+//         {
+//           occupancy: 3,
+//           price: 8000,
+//           ac: false,
+//           _id: "64bd6f8a89ec4e5a16b2de8a",
+//         },
+//         {
+//           occupancy: 3,
+//           price: 10000,
+//           ac: true,
+//           _id: "64bd6f8a89ec4e5a16b2de8a",
+//         },
+//       ],
 
-      amenities: {
-        lift: true,
-        cctv: true,
-        wifi: false,
-        ac: false,
-        tv: true,
+//       amenities: {
+//         lift: true,
+//         cctv: true,
+//         wifi: false,
+//         ac: false,
+//         tv: true,
 
-        powerBackup: false,
-        library: true,
-      },
-      rules: {
-        guests: true,
-        smoking: true,
-        loudMusicAllowed: true,
-        alcoholAllowed: false,
-      },
-    },
-    {
-      sharing: [
-        {
-          occupancy: 1,
-          price: 8000,
-          ac: false,
-          _id: "64bd6f8a89ec4e5a16b2de8a",
-        },
-        {
-          occupancy: 3,
-          price: 10000,
-          ac: false,
-          _id: "64bd6f8a89ec4e5a16b2de8a",
-        },
-        {
-          occupancy: 2,
-          price: 8000,
-          ac: false,
-          _id: "64bd6f8a89ec4e5a16b2de8a",
-        },
-        {
-          occupancy: 2,
-          price: 8000,
-          ac: false,
-          _id: "64bd6f8a89ec4e5a16b2de8a",
-        },
-        {
-          occupancy: 3,
-          price: 8000,
-          ac: false,
-          _id: "64bd6f8a89ec4e5a16b2de8a",
-        },
-        {
-          occupancy: 3,
-          price: 10000,
-          ac: true,
-          _id: "64bd6f8a89ec4e5a16b2de8a",
-        },
-      ],
+//         powerBackup: false,
+//         library: true,
+//       },
+//       rules: {
+//         guests: true,
+//         smoking: true,
+//         loudMusicAllowed: true,
+//         alcoholAllowed: false,
+//       },
+//     },
+//     {
+//       sharing: [
+//         {
+//           occupancy: 1,
+//           price: 8000,
+//           ac: false,
+//           _id: "64bd6f8a89ec4e5a16b2de8a",
+//         },
+//         {
+//           occupancy: 3,
+//           price: 10000,
+//           ac: false,
+//           _id: "64bd6f8a89ec4e5a16b2de8a",
+//         },
+//         {
+//           occupancy: 2,
+//           price: 8000,
+//           ac: false,
+//           _id: "64bd6f8a89ec4e5a16b2de8a",
+//         },
+//         {
+//           occupancy: 2,
+//           price: 8000,
+//           ac: false,
+//           _id: "64bd6f8a89ec4e5a16b2de8a",
+//         },
+//         {
+//           occupancy: 3,
+//           price: 8000,
+//           ac: false,
+//           _id: "64bd6f8a89ec4e5a16b2de8a",
+//         },
+//         {
+//           occupancy: 3,
+//           price: 10000,
+//           ac: true,
+//           _id: "64bd6f8a89ec4e5a16b2de8a",
+//         },
+//       ],
 
-      amenities: {
-        lift: true,
-        cctv: true,
-        wifi: true,
-        ac: true,
-        tv: true,
+//       amenities: {
+//         lift: true,
+//         cctv: true,
+//         wifi: true,
+//         ac: true,
+//         tv: true,
 
-        powerBackup: false,
-        library: true,
-      },
-      rules: {
-        guests: true,
-        smoking: true,
-        loudMusicAllowed: true,
-        alcoholAllowed: true,
-      },
-    },
-  ],
-  {
-    amenities: ["tv", "library"],
-    rules: ["guests", "loudMusicAllowed"],
-    sharing: [2, 4],
-  },
-  1
-);
+//         powerBackup: false,
+//         library: true,
+//       },
+//       rules: {
+//         guests: true,
+//         smoking: true,
+//         loudMusicAllowed: true,
+//         alcoholAllowed: true,
+//       },
+//     },
+//   ],
+//   {
+//     amenities: ["tv", "library"],
+//     rules: ["guests", "loudMusicAllowed"],
+//     sharing: [2, 4],
+//   },
+//   1
+// );
+
+const createSeoFriendlyPublicId = (fileName) => {
+  // Remove file extension (e.g., .jpg, .png) from the original filename
+  const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
+
+  // Replace spaces and special characters with hyphens to create a clean URL
+  const seoFriendlyName = nameWithoutExtension
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-");
+
+  // Append a unique identifier (UUID) to ensure uniqueness
+  const uniqueId = Math.random().toString(36).substr(2, 9);
+  return `images/${seoFriendlyName}-${uniqueId}`;
+};
+
+// console.log(createSeoFriendlyPublicId("abc%^*adkjabdhs.jpg"));
+
+console.log(await nanoid(15));

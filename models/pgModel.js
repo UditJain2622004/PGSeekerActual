@@ -190,6 +190,10 @@ const pgSchema = new mongoose.Schema(
       // },
       // required: [true, "Please provide at least one image."],
     },
+    coverImage: {
+      type: String,
+      // required: [true, "Please provide a cover image."],
+    },
 
     location: {
       type: {

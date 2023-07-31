@@ -1,6 +1,7 @@
 import express from "express";
 import * as pgController from "./../controllers/pgController.js";
 import * as authController from "./../controllers/authController.js";
+import * as imageController from "./../controllers/imageController.js";
 
 const router = express.Router();
 
@@ -34,8 +35,11 @@ router
 
 router.route("/search").post(pgController.searchPg);
 
-// router
-//   .route("/upload")
-//   .post(pgController.upload.array("images", 50), pgController.uploadPics);
+router.route("/upload").post(
+  // imageController.upload.array("images", 50),
+  imageController.uploadImagesLocal,
+  imageController.uploadPics,
+  imageController.sendResponse
+);
 
 export default router;

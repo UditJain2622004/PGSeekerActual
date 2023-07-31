@@ -88,8 +88,20 @@ export default (err, req, res, next) => {
   }
 
   if (err.name === "MulterError") {
-    response.message += `You can upload maximum 50 pictures.`;
-
+    // if (err.code === "LIMIT_FILE_COUNT") {
+    //   response.message += `You can upload maximum 50 pictures.`;
+    // }
+    if (err.code === "LIMIT_UNEXPECTED_FILE") {
+      if (err.field === "images")
+        response.message += `You can upload maximum 50 images.`;
+      else if (err.field === "coverImage")
+        response.message += `You can upload maximum 1 cover images.`;
+      else response.message += `Something went wrong.`;
+    } else if (err.code === "LIMIT_FILE_SIZE") {
+      response.message += `Image should be smaller than 5MB.`;
+    } else {
+      response.message += `Something went wrong.`;
+    }
     // to mark this error as isOperational
     err = new AppError(response.message, 400);
   }

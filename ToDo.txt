@@ -10,10 +10,12 @@ should a user be deleted? (deleteMe) -- NO
 
 
 *** Reminders
-protected access removed from reviewRouter,pgRouter
+* protected access removed from reviewRouter,pgRouter
 * Pagination and limit(no. of docs on 1 page) added.  (Have to provide in query string,  localhost:5000/api/v1/pg/search?page=1&limit=20)
   page=1 and limit = 20 are set by default
-
+* max image size 5 MB set.
+* set required field on pgSchema coverImage field
+* uncomment coverImage existence check in uploadPics function of imageController.js
 
 *** TODOs
 
@@ -24,7 +26,8 @@ image field validation in schema
 enum in address.state
 gateClosingTimeValidation
 
-
+* add image upload to update
+* MAYBE put coverImages in separate folder on cloudinary
 * updatePG function(the one with more data, 1 call to db has to be modified according to data coming from frontend, the other one doesn't work)
 * a pre \findOneAnd\ hook is defined to update minPrice, maxPrice on updating pg and sharing field, bcz currently updating pg 
   using findOneAndUpdate. If it changes, have to change the hook too
@@ -32,9 +35,8 @@ gateClosingTimeValidation
 
 * email
 
-
-* pic upload
-* improve image upload settings (like edit image before upload)
+* set display name on cloudinary
+* file type validation using "fileType" library
 * image update (adding, removing images)
 * delete uploaded images if error during creating pg
 * image comes with google OAuth. add to user doc if ever make image field for user (passport.js file)
@@ -43,6 +45,8 @@ gateClosingTimeValidation
 * login with google(success,failure redirects mixup, test thoroughly after frontend)(userRouter.js)
 * split filtering between frontend and backend. (basic filters on frontend and complex on backend)
 * add nearbyPlaces to filters (but need suggestions system first for suggesting localities, places names etc.)
+
+* summary and stats routes for pgs
 
 
 * lot of loops in modifySearchedPg function, try to minimise them
@@ -55,10 +59,12 @@ gateClosingTimeValidation
 * improve reviews like review for different features of PG
 * search pgs based on (nearby) places (maybe make spearate schema for places)
 * deleting pg and reviews on deleting user
+* handle image upload interruptions like network failure, (resume uploading or something)
 * deleting reviews on deleting pg
 * when refreshtoken is about to expire or has just expired, show user a page login again there and then instead of logging him out
 * remove unnecessary fields from response(select:false)(but select:false only prevents when queried, when we like create user and 
   send it in response, select:false does not work)
+* MAYBE use different sized images for different uses (like for card or details page etc.) and different devices
 * check if password encryption is okay
 * test frontend , how it behaves on clearing cookies  or cache clearing etc. authcontroller.js functions uses cookies a lot
 
@@ -66,30 +72,34 @@ gateClosingTimeValidation
 
 
 
-set email sending gmail (config.env)
-change image upload folder name for actual uploads or maybe create a whole new cloudinary
-change git repository to private
-official email on mongoDB Atlas and Cloudinary
-cors settings (app.js)
-furnish app.js
-import only necessary functions from packages(for e.g only validator.isEmail not the complete validator package) (research if this actually enhances performance)
-decide which route to protect,restrict
-improve cookie settings (httpOnly,secure etc.)
-
+* set email sending gmail (config.env)
+* change image upload folder name for actual uploads or maybe create a whole new cloudinary
+* change git repository to private
+* official email on mongoDB Atlas and Cloudinary
+* cors settings (app.js)
+* furnish app.js
+* import only necessary functions from packages(for e.g only validator.isEmail not the complete validator package) (research if this actually enhances performance)
+* decide which route to protect,restrict
+* improve cookie settings (httpOnly,secure etc.)
+* improve error messages
 
 
 
 **Frontend
-clearFilters buttons
-good tutorial bookmarked for showing errors in frontend
-infinite scroll
-top loading bar
-propTypes
-defaultProps
-it should not be possible to give review 2 times on same PG. like if review given, there should be some indication on frontend that user has already reviewed it instead of letting user
-give review again and then show error (or maybe show an edit review option)
-sharing filter getting cleared when go to a pg detail page and come back to listing page
-
+* clearFilters buttons
+* good tutorial bookmarked for showing errors in frontend
+* infinite scroll
+* top loading bar
+* propTypes
+* defaultProps
+* it should not be possible to give review 2 times on same PG. like if review given, there should be some indication on 
+  frontend that user has already reviewed it instead of letting user
+* give review again and then show error (or maybe show an edit review option)
+* sharing filter getting cleared when go to a pg detail page and come back to listing page
+* Lazy Loading for Carousel:
+* Implement lazy loading for the carousel images. This way, the images outside the user's viewport will load only 
+  when the user scrolls to them, reducing initial page load times.
+* image validations
 
 
 {
