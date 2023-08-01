@@ -169,8 +169,8 @@ const pgSchema = new mongoose.Schema(
     gateClosingTime: {
       type: String,
       trim: true,
-      minLength: [5, "Invalid Gate Closing Time"],
-      maxLength: [5, "Invalid Gate Closing Time"],
+      // minLength: [5, "Invalid Gate Closing Time"],
+      // maxLength: [5, "Invalid Gate Closing Time"],
     },
     updated: {
       type: Date,
@@ -180,7 +180,13 @@ const pgSchema = new mongoose.Schema(
     maxPrice: { type: Number },
 
     images: {
-      type: [String],
+      type: [
+        {
+          // url: String,
+          publicId: String,
+          version: Number,
+        },
+      ],
       // required:true,
       // validate: {
       //   validator: function (array) {
@@ -191,7 +197,11 @@ const pgSchema = new mongoose.Schema(
       // required: [true, "Please provide at least one image."],
     },
     coverImage: {
-      type: String,
+      type: {
+        // url: String,
+        publicId: String,
+        version: Number,
+      },
       // required: [true, "Please provide a cover image."],
     },
 
@@ -200,11 +210,14 @@ const pgSchema = new mongoose.Schema(
         type: String,
         default: "Point",
         enum: ["Point"],
+        // set(val) {
+        //   return this.location.coordinates ? "Point" : "";
+        // },
       },
       //[longitude,latitude]
       coordinates: {
         type: [Number],
-        required: true,
+        // required: true,
         validate: {
           validator: (array) => {
             if (array.length !== 2) {
@@ -255,15 +268,32 @@ pgSchema.pre("save", function (next) {
 
 // if location is not given, coordinates will be undefined but the "type" field will set to "Point" bcz of default value
 // which will give error if tr to save without coordinates. So we clear the locationn field completely.
-pgSchema.pre("save", function (next) {
-  if (!this.location.coordinates) {
-    this.location = undefined;
+// pgSchema.pre("validate", function (next) {
+//   if (!this.location.coordinates) {
+//     console.log("Hlo");
+//     this.location = undefined;
+//   }
+//   next();
+// });
+// pgSchema.pre("save", function (next) {
+//   console.log("Hlo");
+//   if (!this.location.coordinates) {
+//     this.location = undefined;
+//   }
+//   next();
+// });
+
+// sets "type" subfield of location field according to presence of "coordinates"
+pgSchema.path("location.type").set(function (val) {
+  if (this.location.coordinates && this.location.coordinates.length === 2) {
+    return "Point";
+  } else {
+    return undefined;
   }
-  next();
 });
 
 // to update minprice, maxprice on updating sharing field
-pgSchema.pre(/^findOneAnd/, function (next) {
+pgSchema.pre(/^findOneAndUpdate/, function (next) {
   // "this" refers to the query object
   // so we check if the sharing field is present in the "_update" field of query
   if (this._update.sharing) {

@@ -1,0 +1,28 @@
+IMAGE CONTROLLER -------------------------------------------------------------------------------------------------------------------
+
+we have 2 fields - images and coverImage
+IMAGES SHOULD COME FROM THESE 2 FIELDS ONLY. OTHERWISE IT THROWS ERROR
+coverImage is 1 image and images is an array of images
+to check for error in uploading images -
+for "images" , if any image is not uploaded for some reason, the response will contain an "errors" field with file
+name of images not uploaded
+for "coverImage", if "coverImage" field does not exist in the response , it means the coverImage was not uploaded
+
+
+** currently sending and storing only "public_id" and "version" of image in database
+we have to dynamically create cloudinary url using these 2
+
+Example url - https://res.cloudinary.com/dmuryuq0q/image/upload/f_auto,q_60/v1690790568/images/pg_image_Lk70UN2iGCSfQre.webp
+
+IN THIS URL ->
+dmuryuq0q                - cloudinary name (in .env file)
+f_auto,q_60              - transformations that we apply*
+v1690790568              - version
+pg_image_Lk70UN2iGCSfQre - public_id
+
+We can skip the transformations bcz we have already applied them using upload
+we can use them if we want to apply some custom transformation on image before accessing it
+
+** If ever want to store complete url in database -
+add a field "url:String" in the "images" and "coverImage" field of pgSchema
+In the "imageController.js", in "uploadToCloudinary" function,when sending success response, send url with it also,(just uncomment the line)

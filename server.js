@@ -41,6 +41,7 @@ const server = app.listen(process.env.PORT, () => {
 // aSynchronous code errors emits unhandledRejection event , so we can catch them using that
 process.on("unhandledRejection", (err) => {
   console.log("Unhandled rejection!! Shutting down...");
+  console.log(err);
   console.log(err.name, err.message);
   server.close(() => {
     process.exit(1);

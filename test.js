@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid/async";
-
+import cloudinary from "cloudinary";
 const modifySearchedPgs = (pgs, filters, next) => {
   try {
     const modifiedPgs = [];
@@ -210,4 +210,18 @@ const createSeoFriendlyPublicId = (fileName) => {
 
 // console.log(createSeoFriendlyPublicId("abc%^*adkjabdhs.jpg"));
 
-console.log(await nanoid(15));
+// console.log(await nanoid(15));
+
+cloudinary.config({
+  cloud_name: "dmuryuq0q",
+  api_key: "418763775149127",
+  api_secret: "oaepuII80zfGR6MlrOzUYnvKikI",
+});
+
+cloudinary.v2.uploader.destroy("pg_image_BLyxhQs-9zteA04", (error, result) => {
+  if (error) {
+    console.error("Error deleting image:", error);
+  } else {
+    console.log("Image deleted successfully:", result);
+  }
+});

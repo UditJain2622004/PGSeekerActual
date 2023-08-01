@@ -4,7 +4,13 @@ import cloudinary from "cloudinary";
 
 import AppError from "../utils/appError.js";
 import PG from "./../models/pgModel.js";
-import { filterObj, removeFalseValues } from "../utils/utils.js";
+import {
+  filterObj,
+  removeFalseValues,
+  capitalizeEachWord,
+} from "../utils/utils.js";
+
+import { deleteImages } from "./imageController.js";
 
 export const createPgDocu = async (req, res, next) => {
   try {
@@ -160,16 +166,17 @@ const wait = (ms) => {
 
 export const createPgDoc = async (req, res, next) => {
   try {
-    // req.body.amenities = JSON.parse(req.body.pgAmenities);
+    // req.body.amenities = JSON.parse(req.body.amenities);
     // req.body.sharing = JSON.parse(req.body.sharing);
     // req.body.address = JSON.parse(req.body.address);
-    // req.body.contact = JSON.parse(req.body.pgContactInfo);
-    // req.body.rules = JSON.parse(req.body.pgRules);
+    // req.body.contact = JSON.parse(req.body.contact);
+    // req.body.rules = JSON.parse(req.body.rules);
     // req.body.noticePeriodDays = req.body.noticePeriodDays * 1;
     // req.body.securityDeposit = req.body.securityDeposit * 1;
     // req.body.address.pincode = req.body.address.pincode * 1;
     // req.body.name = capitalizeEachWord(req.body.name);
     // req.body.address.locality = capitalizeEachWord(req.body.address.locality);
+    // req.body.owner = req.body.userID;
 
     let prices = req.body.sharing?.map((el) => {
       // if price not defined for any sharing option we return 0 so that it does not give error when calculating minPrice,maxPrice
@@ -182,7 +189,6 @@ export const createPgDoc = async (req, res, next) => {
       req.body.minPrice = Math.min(...prices);
       req.body.maxPrice = Math.max(...prices);
     }
-    // req.body.owner = req.body.userID;
 
     // create pg doc. and validate it (not saving it yet, save after successful image upload)
     const data = filterObj(
@@ -192,30 +198,46 @@ export const createPgDoc = async (req, res, next) => {
     );
     const newPg = new PG(data);
     await newPg.validate();
+
     req.newPg = newPg;
     next();
   } catch (err) {
+    req.filenames?.forEach((file) => fs.unlinkSync("./uploads/" + file));
     next(err);
   }
 };
 
 export const createPg = async (req, res, next) => {
   try {
-    const newPg = await req.newPg.save();
+    if (req.body.images) req.newPg.images = req.body.images;
+    if (req.body.coverImage) req.newPg.coverImage = req.body.coverImage;
 
+    console.log(req.body.images);
+    const newPg = await req.newPg.save();
     const response = {
       status: "success",
       data: {
         Pg: newPg,
       },
     };
-    if (req.files && !req.body.images) {
-      console.log("Images not uploaded");
+    // if (req.files && !req.body.images) {
+    //   console.log("Images not uploaded");
+    //   response.status = "imageUploadFailed";
+    // }
+    if (req.body.imageErrors && req.body.imageErrors.length > 0) {
       response.status = "imageUploadFailed";
+      response.imageErrors = req.body.imageErrors;
     }
     console.log("PG created");
     res.status(201).json(response);
   } catch (err) {
+    const publicIds = req.body.images?.map((el) => el.publicId);
+    if (req.body.coverImage) publicIds?.push(req.body.coverImage);
+    const deleted = await deleteImages(publicIds);
+    if (!deleted) {
+      //handle image deletion failed
+      // maybe make a separate schema for pending tasks and send it there
+    }
     next(err);
   }
 };
@@ -247,13 +269,17 @@ export const updatePgById = async (req, res, next) => {
     const updates = filterObj(
       req.body,
       //prettier-ignore
-      ["owner","updated","minPrice","maxPrice","ratingsAverage","ratingsQuantity"],
+      ["owner","updated","minPrice","maxPrice","ratingsAverage","ratingsQuantity","images"],
       true
     );
 
     const pg = await PG.findOneAndUpdate(
       { _id: req.params.id, owner: req.user._id },
-      updates,
+      {
+        $set: updates,
+        $push: { images: { $each: req.body.images } },
+      },
+      // updates,
       {
         runValidators: true,
         new: true,
@@ -332,12 +358,25 @@ export const updatePgById = async (req, res, next) => {
 
 export const deletePgById = async (req, res, next) => {
   try {
+    console.log("Yes");
+    console.log(req.params.id);
     const pg = await PG.findOneAndDelete({
       _id: req.params.id,
-      owner: req.user._id,
+      // owner: req.user._id,
     });
+    console.log(pg);
 
     if (!pg) return next(new AppError("Invalid Request", 400));
+
+    // delete images
+    const publicIds = pg.images.map((el) => el.publicId + "S");
+    if (pg.coverImage) publicIds.push(pg.coverImage);
+    const deleted = await deleteImages(publicIds);
+
+    if (!deleted) {
+      //handle image deletion failed
+      // maybe make a separate schema for pending tasks and send it there
+    }
 
     res.status(204).json({
       status: "success",
@@ -418,12 +457,9 @@ export const searchPg = async (req, res, next) => {
     query = query.sort({ minPrice: req.body.sort || 1 });
     //PAGINATION
     const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 20;
+    const limit = req.query.limit * 1 || 50;
     const skip = (page - 1) * limit;
-    query = query
-      .skip(skip)
-      .limit(limit)
-      .select("amenities rules sharing -_id");
+    query = query.skip(skip).limit(limit).select("_id images");
 
     let pgs = await query.lean();
 

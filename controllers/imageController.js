@@ -80,14 +80,19 @@ export const uploadImagesLocal = upload.fields([
 
 export const uploadPics = async (req, res, next) => {
   try {
-    // if (!req.body.coverImage)
+    if (!req.files) return next();
+    // if (!req.files.coverImage)
     //   return next(new AppError("Please provide a cover image"));
 
     // UPLOAD COVER IMAGES ----------------------------------------------------------------------------------------------------
     if (req.files.coverImage) {
       const coverImagePath = "./uploads/" + req.files.coverImage[0].filename;
-      const coverImageUrl = await uploadToCloudinary(coverImagePath, req);
-      req.body.coverImage = coverImageUrl.url;
+      const coverImage = await uploadToCloudinary(coverImagePath, req);
+      if (coverImage) {
+        // remove the status field and set rest of the result in req.body.coverImage
+        delete coverImage.status;
+        req.body.coverImage = coverImage;
+      }
     }
     // just remove above 5 lines if ever remove the coverImage field & take "imagePaths" variable
     // from req.files.map instead of req.files.images.map
@@ -102,10 +107,14 @@ export const uploadPics = async (req, res, next) => {
       const results = await parallelImageUploads(imagePaths, req);
       //   console.log(results);
       req.body.images = [];
-      req.body.errors = [];
+      req.body.imageErrors = [];
       results.forEach((el) => {
-        if (el.status === "success") req.body.images.push(el.url);
-        else if (el.status === "failure") req.body.errors.push(el.image);
+        if (el.status === "success") {
+          // remove the status field and set rest of the result in req.body.images
+          delete el.status;
+          req.body.images.push(el);
+        } else if (el.status === "failure")
+          req.body.imageErrors.push(el.erroredImage);
       });
 
       next();
@@ -118,14 +127,18 @@ export const uploadPics = async (req, res, next) => {
 // Function to upload an image to Cloudinary
 const uploadToCloudinary = async (localFilePath, req) => {
   try {
+    // couldn't do it during local upload bcz didn't have access to file yet
     const type = await fileTypeFromFile(localFilePath);
     console.log(type);
     if (!type || !type.mime.startsWith("image")) {
       throw Error("Invalid Image");
     }
+
+    // create custom public id for image
+    const publicId = "pg_image_" + (await nanoid(15));
     const myCloud = await cloudinary.v2.uploader.upload(localFilePath, {
       folder: "images",
-      public_id: "pg_image_" + (await nanoid(15)),
+      public_id: publicId,
       // format: "png",  // convert all images to given format
       eager: [
         {
@@ -141,7 +154,6 @@ const uploadToCloudinary = async (localFilePath, req) => {
 
         //WE CAN DEFINE MULTIPLE EAGER TRANSFORMS TO CREATE MULTIPLE VERSIONS OF SAME IMAGE (MAY BE USEFUL IF WE WANT TO USE DIFFERENT
         // SIZED IMAGES FOR DIFFERENT DEVICES OR DIFFERENT PLACES IN THE WEBSITE)
-        // { width: 260, height: 200, crop: "crop", gravity: "north" },
       ],
       eager_async: true, // Set eager_async to true to make it an eager transformation
     });
@@ -151,7 +163,9 @@ const uploadToCloudinary = async (localFilePath, req) => {
 
     return {
       status: "success",
-      url: myCloud.eager[0].secure_url,
+      // url: myCloud.eager[0].secure_url,
+      publicId,
+      version: myCloud.version,
     };
   } catch (err) {
     fs.unlinkSync(localFilePath);
@@ -159,7 +173,7 @@ const uploadToCloudinary = async (localFilePath, req) => {
     return {
       status: "failure",
       error: err.message,
-      image: localFilePath.split("-&")[1], // filename of image which caused error
+      erroredImage: localFilePath.split("-&")[1], // filename of image which caused error
     };
     // throw err;
   }
@@ -187,9 +201,9 @@ export const sendResponse = (req, res, next) => {
   const response = {
     data: { images: req.body.images, coverImage: req.body.coverImage },
   };
-  if (req.body.errors && req.body.errors.length > 0)
-    response.data.errors = req.body.errors;
-  res.status(200).json({
+  if (req.body.imageErrors && req.body.imageErrors.length > 0)
+    response.data.imageErrors = req.body.imageErrors;
+  res.json(200).json({
     status: "success",
     response,
   });
@@ -291,3 +305,33 @@ export const sendResponse = (req, res, next) => {
 // const wait = (ms) => {
 //   return new Promise((resolve) => setTimeout(resolve, ms));
 // };
+
+//           DELETE IMAGE ==========================================================================================================
+
+// export const deleteImage = async (req, res, next) => {
+//   const result = await cloudinary.v2.uploader.destroy(
+//     "images/" + req.body.publicId,
+//     {
+//       invalidate: true,
+//       resource_type: "image",
+//     }
+//   );
+
+// };
+
+export const deleteImages = async (publicIds, folder = "images") => {
+  try {
+    publicIds?.forEach(async (id) => {
+      const result = await cloudinary.v2.uploader.destroy(`${folder}/${id}`, {
+        invalidate: true,
+        resource_type: "image",
+      });
+
+      console.log(result);
+      return true;
+    });
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+};
